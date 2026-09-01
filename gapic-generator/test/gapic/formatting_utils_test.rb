@@ -723,4 +723,50 @@ class FormattingUtilsTest < Minitest::Test
       "New paragraph with \\\\{100, 200}\n"
     ], result
   end
+
+  def test_format_doc_lines_rejoin_split_urls
+    result = Gapic::FormattingUtils.format_doc_lines nil, [
+      "[`google.rpc.Status`](https:\n",
+      "//github.com/googleapis/googleapis/blob/master/google/rpc/status.proto)\n"
+    ]
+    assert_equal [
+      "[`google.rpc.Status`](https://github.com/googleapis/googleapis/blob/master/google/rpc/status.proto)\n"
+    ], result
+  end
+
+  def test_format_doc_lines_rejoin_split_urls_without_trailing_newlines
+    result = Gapic::FormattingUtils.format_doc_lines nil, [
+      "[`google.rpc.Status`](https:",
+      "//github.com/googleapis/googleapis/blob/master/google/rpc/status.proto)"
+    ]
+    assert_equal [
+      "[`google.rpc.Status`](https://github.com/googleapis/googleapis/blob/master/google/rpc/status.proto)"
+    ], result
+  end
+
+  def test_format_doc_lines_without_trailing_newlines_preserves_lines
+    result = Gapic::FormattingUtils.format_doc_lines nil, [
+      "## Overview",
+      "",
+      "Typical Garbage Service overview.",
+      "",
+      "## Resources"
+    ]
+    assert_equal [
+      "## Overview",
+      "",
+      "Typical Garbage Service overview.",
+      "",
+      "## Resources"
+    ], result
+  end
+
+  def test_format_doc_lines_non_existent_messages
+    result = Gapic::FormattingUtils.format_doc_lines nil, [
+      "The column names must contain [display_name-s][google.cloud.automl.v1.ColumnSpec.display_name]!\n"
+    ]
+    assert_equal [
+      "The column names must contain display_name-s!\n"
+    ], result
+  end
 end

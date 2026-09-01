@@ -32,6 +32,13 @@ module Gapic
       "version", "yield", "yieldparam", "yieldreturn"
     ].freeze
 
+    # Non-existent messages referenced in proto documentation comments (b/158466893).
+    # Cross-references to these messages (or their fields) cannot be resolved, so the links
+    # are stripped to avoid broken documentation references.
+    @non_existent_messages = [
+      "google.cloud.automl.v1.ColumnSpec"
+    ].freeze
+
     class << self
       ##
       # Given an enumerable of lines, performs yardoc formatting, including:
@@ -52,9 +59,8 @@ module Gapic
       #
       def format_doc_lines api, lines, disable_xrefs: false, transport: nil
         transport ||= api&.default_transport || :grpc
-        # Tracks fenced blocks, multiline inline code spans, and indented code blocks.
-        in_fence = false
-        in_code_span = false
+        lines = rejoin_split_urls lines
+        in_fence = in_code_span = false
         in_block = nil
         base_indent = 0
         (lines - @omit_lines).map do |line|
@@ -98,6 +104,21 @@ module Gapic
       end
 
       private
+
+      def rejoin_split_urls lines
+        return lines if lines.empty?
+
+        # Fix for misformatted markdown links across line breaks (b/153077040).
+        # Callers may pass lines with trailing newlines (e.g., from String#each_line in schema wrappers)
+        # or without trailing newlines (e.g., from String#split("\n") in GemPresenter#readme_description).
+        # We must preserve the presence or absence of trailing newlines on each element.
+        has_newlines = lines.any? { |l| l.end_with? "\n" }
+        if has_newlines
+          lines.join.gsub(%r{https:\n\s*//}, "https://").each_line.to_a
+        else
+          lines.join("\n").gsub(%r{https:\n\s*//}, "https://").split("\n", -1)
+        end
+      end
 
       def update_indent_state in_block, base_indent, line, indent
         if in_block != true && @list_element_detector =~ line
@@ -155,6 +176,12 @@ module Gapic
 
       def format_line_xrefs api, line, disable_xrefs, transport
         while (m = @xref_detector.match line)
+          # Remove links to known non-existent messages (b/158466893)
+          if @non_existent_messages.any? { |msg| m[:addr] == msg || m[:addr].start_with?("#{msg}.") }
+            line = "#{m[:pre]}#{m[:text]}#{m[:post]}"
+            next
+          end
+
           entity = api.lookup m[:addr]
           is_mixin_field_addr = Gapic::Model::Mixins.mixin_message_field_address?(
             m[:addr],

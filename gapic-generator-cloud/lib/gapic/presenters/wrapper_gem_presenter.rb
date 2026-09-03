@@ -105,6 +105,22 @@ module Gapic
         gem_config(:factory_method_suffix).to_s
       end
 
+      ##
+      # The canonical gem name prior to renaming.
+      #
+      # In some cases, a wrapper gem cannot be published under its canonical
+      # name because a conflicting gem already exists on RubyGems.org. For example:
+      # - "google-cloud-run" was renamed to "google-cloud-run-client" because RubyGems
+      #   already had an existing gem named "google_cloud_run".
+      # - "google-iam" was renamed to "google-iam-client" because RubyGems already had
+      #   an unrelated gem named "google-iam".
+      #
+      # Even though the wrapper gem itself is renamed with a "-client" suffix, it
+      # still wraps versioned client gems named after the canonical name (e.g.
+      # "google-cloud-run-v2", "google-iam-v2") and defines classes in the canonical
+      # namespace (e.g. "Google::Cloud::Run", "Google::Iam").
+      #
+      # @return [String]
       def renamed_from
         gem_config(:renamed_from) || name
       end

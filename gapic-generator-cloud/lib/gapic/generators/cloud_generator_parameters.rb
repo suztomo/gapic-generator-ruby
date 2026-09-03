@@ -40,6 +40,7 @@ module Gapic
         "ruby-cloud-homepage"              => ":gem.:homepage",
         "ruby-cloud-env-prefix"            => ":gem.:env_prefix",
         "ruby-cloud-wrapper-of"            => ":gem.:version_dependencies",
+        "ruby-cloud-renamed-from"          => ":gem.:renamed_from",
         "ruby-cloud-migration-version"     => ":gem.:migration_version",
         "ruby-cloud-product-url"           => ":gem.:product_documentation_url",
         "ruby-cloud-issues-url"            => ":gem.:issue_tracker_url",

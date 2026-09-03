@@ -105,12 +105,37 @@ module Gapic
         gem_config(:factory_method_suffix).to_s
       end
 
+      def renamed_from
+        gem_config(:renamed_from) || name
+      end
+
+      def renamed_gem?
+        renamed_from != name
+      end
+
+      def namespace
+        gem_config(:namespace) ||
+          fix_namespace(@api, renamed_from.split("-").map(&:camelize).join("::"))
+      end
+
+      def gem_namespace
+        fix_namespace(@api, name.split("-").map(&:camelize).join("::"))
+      end
+
+      def version_name_full
+        if renamed_gem?
+          "#{gem_namespace}::VERSION"
+        else
+          "#{namespace}::VERSION"
+        end
+      end
+
       def version_dependencies
         gem_config(:version_dependencies).to_s.split(";").map { |str| str.split ":" }
       end
 
       def versioned_gems
-        version_dependencies.map { |version, _requirement| "#{name}-#{version}" }.sort
+        version_dependencies.map { |version, _requirement| "#{renamed_from}-#{version}" }.sort
       end
 
       def default_version
@@ -129,7 +154,7 @@ module Gapic
             # 0.x and 1.x versions to ease the transition to 1.0 (GA) releases
             # for those dependencies. (Note the 0.x->1.0 transition is
             # generally not breaking.)
-            deps["#{name}-#{version}"] =
+            deps["#{renamed_from}-#{version}"] =
               if requirement.start_with? "0."
                 [">= #{requirement}", "< 2.a"]
               else
@@ -143,13 +168,13 @@ module Gapic
       end
 
       def google_cloud_short_name
-        m = /^google-cloud-(.*)$/.match name
+        m = /^google-cloud-(.*)$/.match renamed_from
         return nil unless m
         m[1].tr "-", "_"
       end
 
       def docs_link version: nil, class_name: nil, text: nil, gem_name: nil
-        gem_name ||= version ? "#{name}-#{version}" : name
+        gem_name ||= version ? "#{renamed_from}-#{version}" : name
         base_url =
           if cloud_product?
             "https://cloud.google.com/ruby/docs/reference/#{gem_name}/latest"

@@ -46,6 +46,7 @@ class CloudApiTest < Minitest::Test
       ["ruby-cloud-homepage", API_INFO[:homepage]],
       ["ruby-cloud-env-prefix", API_INFO[:env_prefix]],
       ["ruby-cloud-wrapper-of", API_INFO[:wrapper_of]],
+      ["ruby-cloud-renamed-from", API_INFO[:renamed_from]],
       ["ruby-cloud-migration-version", API_INFO[:migration_version]],
       ["ruby-cloud-product-url", API_INFO[:product_url]],
       ["ruby-cloud-issues-url", API_INFO[:issues_url]],
